@@ -208,11 +208,11 @@ namespace OcbMicroSplat
         static string[] NormalPathTails = new string[]
         { "nrm", "norm", "normal" };
         static string[] HeightPathTails = new string[]
-        { "height", "displacement" };
+        { "height", "disp", "displacement" };
         static string[] SmoothnessPathTails = new string[]
         { "smooth", "smoothness", "rough", "roughness" };
         static string[] OcclusionPathTails = new string[]
-        { "ao", "ambient", "occlusion", "ambientocclusion" };
+        { "ao", "ambient", "occlusion", "ambientocclusion", "occ" };
 
         private void FillMissingTexturesHeuristically(Texture2D tex,
             OcbMicroSplatArrayEntry item, string[] tails)
