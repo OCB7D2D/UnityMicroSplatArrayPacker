@@ -253,8 +253,19 @@ namespace OcbMicroSplat
 			for (int m = 0; m < normal.mipmapCount; m++)
 			{
 				var pixels = normal.GetPixels(m);
+				for (int i = 0; i < pixels.Length; i++)
+				{
+					var col = pixels[i];
+					float x = pixels[i].a * 2f - 1f;
+					float y = pixels[i].g * 2f - 1f;
+					col.r = col.g = col.b = Mathf.Max(
+						Mathf.Abs(x), Mathf.Abs(y));
+					col.a = 1f;
+					pixels[i] = col;
+				}
 				cpy.SetPixels(pixels, m);
 			}
+			cpy.Apply(false, false);
 			return cpy;
 		}
 
