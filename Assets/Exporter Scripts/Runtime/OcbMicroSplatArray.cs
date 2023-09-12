@@ -15,6 +15,15 @@ namespace OcbMicroSplat
         public string Path = "";
 
         [HideInInspector]
+        public TextureWrapMode WrapMode = TextureWrapMode.Repeat;
+
+        [HideInInspector]
+        public FilterMode FilterMode = FilterMode.Trilinear;
+
+        [HideInInspector]
+        public int AnisoLevel = 8;
+
+        [HideInInspector]
         public OcbMicroSplatArrayEntry[] Textures = null;
 
     }

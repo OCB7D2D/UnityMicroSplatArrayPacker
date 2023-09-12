@@ -132,8 +132,10 @@ namespace OcbMicroSplat
                 Graphics.CopyTexture(tmp, 0, m, dst, i, m);
         }
 
-        public static void CreateTextureArrays(OcbMicroSplatArrayEntry[] textures, string path)
+        public static void CreateTextureArrays(OcbMicroSplatArray cfg, string path)
         {
+
+            var textures = cfg.Textures;
 
             var DiffPath = path.Replace(".asset", "_diff_tarray.asset");
             var NormPath = path.Replace(".asset", "_norm_tarray.asset");
@@ -142,6 +144,10 @@ namespace OcbMicroSplat
             var DiffArray = new Texture2DArray(Width, Height, textures.Length, TextureFormat.DXT5, true, false);
             var NormArray = new Texture2DArray(Width, Height, textures.Length, TextureFormat.DXT5, true, true);
             var ShaoArray = new Texture2DArray(Width, Height, textures.Length, TextureFormat.DXT5, true, true);
+
+            DiffArray.wrapMode = NormArray.wrapMode = ShaoArray.wrapMode = cfg.WrapMode;
+            DiffArray.filterMode = NormArray.filterMode = ShaoArray.filterMode = cfg.FilterMode;
+            DiffArray.anisoLevel = NormArray.anisoLevel = ShaoArray.anisoLevel = cfg.AnisoLevel;
 
             for (int i = 0; i < textures.Length; i++)
             {

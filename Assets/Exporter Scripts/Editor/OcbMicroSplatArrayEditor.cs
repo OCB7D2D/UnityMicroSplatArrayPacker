@@ -59,6 +59,15 @@ namespace OcbMicroSplat
             if (script.Textures?.Length != script.Size)
                 Array.Resize(ref script.Textures, script.Size);
 
+            script.WrapMode = (TextureWrapMode)EditorGUILayout
+                .EnumPopup("Wrap Mode", script.WrapMode);
+
+            script.FilterMode = (FilterMode)EditorGUILayout
+                .EnumPopup("Filter Mode", script.FilterMode);
+
+            script.AnisoLevel = EditorGUILayout.IntSlider(
+                "Aniso Level", script.AnisoLevel, 0, 16);
+
             // int clear = -1;
             // int remove = -1
 
@@ -190,7 +199,7 @@ namespace OcbMicroSplat
             if (GUILayout.Button("Generate Texture2D Array", GUILayout.Height(24)))
             {
                 string path = AssetDatabase.GetAssetPath(target).Replace("\\", "/");
-                OcbMicroSplatArrayCreator.CreateTextureArrays(script.Textures, path);
+                OcbMicroSplatArrayCreator.CreateTextureArrays(script, path);
             }
             GUI.enabled = true;
 
