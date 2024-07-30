@@ -326,6 +326,18 @@ namespace OcbMicroSplat
                 GUILayout.Width(64), GUILayout.Height(64)) as Texture2D;
             if (tex != previous) changed(tex);
             GUI.backgroundColor = color;
+            if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(tex)))
+            {
+                if (GUILayout.Button("Save", GUILayout.Height(24), GUILayout.Width(60)))
+                {
+                    var opath = EditorUtility.SaveFilePanel(
+                        "Texture Path", null, name, "png");
+                    if (string.IsNullOrEmpty(opath) == false) {
+                        var bytes =  tex.EncodeToPNG();
+                        File.WriteAllBytes(opath, bytes);
+                    }
+                }
+            }
             if (renderer != null) renderer();
             EditorGUILayout.EndVertical();
         }
