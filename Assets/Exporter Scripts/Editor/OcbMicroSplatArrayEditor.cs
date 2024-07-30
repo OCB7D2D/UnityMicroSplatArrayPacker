@@ -88,11 +88,12 @@ namespace OcbMicroSplat
 
                     var item = script.Textures[i];
 
-                    if (item.Albedo == null) item.Albedo = null;
-                    if (item.Normal == null) item.Normal = null;
-                    if (item.Height == null) item.Height = null;
-                    if (item.Smoothness == null) item.Smoothness = null;
-                    if (item.Occlusion == null) item.Occlusion = null;
+                    // if (item.Albedo == null) item.Albedo = null;
+                    // if (item.Normal == null) item.Normal = null;
+                    // if (item.Height == null) item.Height = null;
+                    // if (item.Smoothness == null) item.Smoothness = null;
+                    // if (item.Occlusion == null) item.Occlusion = null;
+                    // if (item.Metallic == null) item.Metallic = null;
 
                     if (item.HasTextures())
                     {
@@ -170,6 +171,12 @@ namespace OcbMicroSplat
                     DrawTextureCell(TexTitle("AO", item.Occlusion), ref item.Occlusion, null, changed => {
                         FillMissingTexturesHeuristically(changed, item, OcclusionPathTails);
                     });
+                    DrawTextureCell(TexTitle("Metallic", item.Metallic), ref item.Metallic, null, changed => {
+                        FillMissingTexturesHeuristically(changed, item, MetallicPathTails);
+                    });
+                    DrawTextureCell(TexTitle("Emission", item.Emission), ref item.Emission, null, changed => {
+                        FillMissingTexturesHeuristically(changed, item, EmissionPathTails);
+                    });
 
                     EditorGUILayout.EndHorizontal();
                 }
@@ -222,6 +229,10 @@ namespace OcbMicroSplat
         { "smooth", "smoothness", "rough", "roughness" };
         static string[] OcclusionPathTails = new string[]
         { "ao", "ambient", "occlusion", "ambientocclusion", "occ" };
+        static string[] MetallicPathTails = new string[]
+        { "metal", "metallic" };
+        static string[] EmissionPathTails = new string[]
+        { "emissive", "emission" };
 
         private void FillMissingTexturesHeuristically(Texture2D tex,
             OcbMicroSplatArrayEntry item, string[] tails)
@@ -262,6 +273,12 @@ namespace OcbMicroSplat
                 if (item.Occlusion == null && IsValidTextureFile(
                     name, prefix, OcclusionPathTails))
                         LoadTextureAsset(fname, ref item.Occlusion);
+                if (item.Metallic == null && IsValidTextureFile(
+                    name, prefix, MetallicPathTails))
+                    LoadTextureAsset(fname, ref item.Metallic);
+                if (item.Emission == null && IsValidTextureFile(
+                    name, prefix, EmissionPathTails))
+                    LoadTextureAsset(fname, ref item.Emission);
             }
         }
 
@@ -326,7 +343,7 @@ namespace OcbMicroSplat
                 GUILayout.Width(64), GUILayout.Height(64)) as Texture2D;
             if (tex != previous) changed(tex);
             GUI.backgroundColor = color;
-            if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(tex)))
+            if (tex != null && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(tex)))
             {
                 if (GUILayout.Button("Save", GUILayout.Height(24), GUILayout.Width(60)))
                 {
