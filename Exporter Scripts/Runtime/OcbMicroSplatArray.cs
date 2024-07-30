@@ -41,7 +41,9 @@ namespace OcbMicroSplat
         public bool IsHeightNormalized = true;
         public Texture2D Smoothness;
         public bool IsRoughness = false;
+        public Texture2D Metallic;
         public Texture2D Occlusion;
+        public Texture2D Emission;
 
         public bool HasTextures()
         {
@@ -49,7 +51,9 @@ namespace OcbMicroSplat
                 || Height != null
                 || Normal != null
                 || Smoothness != null
-                || Occlusion != null;
+                || Metallic != null
+                || Occlusion != null
+                || Emission != null;
         }
 
         public void Clear()
@@ -59,7 +63,9 @@ namespace OcbMicroSplat
             Normal = null;
             Smoothness = null;
             IsRoughness = false;
+            Metallic = null;
             Occlusion = null;
+            Emission = null;
         }
     }
 

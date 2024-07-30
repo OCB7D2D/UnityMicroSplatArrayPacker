@@ -57,8 +57,8 @@ namespace OcbMicroSplat
             for (int m = 0; m < tmp.mipmapCount; m++)
             {
                 Color[] pixels = new Color[Width * Height];
-                var albedo = cfg.Albedo?.GetPixels(m);
-                var heights = cfg.Height?.GetPixels(m);
+                var albedo = cfg.Albedo == null ? null : cfg.Albedo.GetPixels(m);
+                var heights = cfg.Height == null ? null : cfg.Height.GetPixels(m);
                 for (int p = 0; p < albedo.Length; p++)
                 {
                     Color color = new Color(0, 0, 0, 0.5f);
@@ -83,13 +83,15 @@ namespace OcbMicroSplat
                 TextureFormat.RGBA32, true, true);
             for (int m = 0; m < cfg.Normal.mipmapCount; m++)
             {
-                var pixels = cfg.Normal.GetPixels(m);
+                var pixels = cfg.Normal == null ? null : cfg.Normal.GetPixels(m);
+                var emission = cfg.Emission == null ? null : cfg.Emission.GetPixels(m);
                 for (int p = 0; p < pixels.Length; p++)
                 {
-                    var pixel = pixels[p];
+                    var pixel = pixels?[p] ?? Color.black;
                     if (cfg.IsNormalInverted) pixel.g = 1f - pixel.g;
                     if (cfg.IsNormalSwitched) (pixel.g, pixel.a) = (pixel.a, pixel.g);
-                    pixel.r = pixel.b = 0f; // Channels are unused
+                    pixel.r = emission?[p][0] ?? 0f;
+                    pixel.b = emission?[p][1] ?? 0f;
                     pixels[p] = pixel;
 
                 }
@@ -111,16 +113,19 @@ namespace OcbMicroSplat
             for (int m = 0; m < tmp.mipmapCount; m++)
             {
                 Color[] pixels = new Color[Width * Height];
-                var heights = cfg.Height?.GetPixels(m);
-                var smoothness = cfg.Smoothness?.GetPixels(m);
-                var occlusion = cfg.Occlusion?.GetPixels(m);
+                var heights = cfg.Height == null ? null : cfg.Height.GetPixels(m);
+                var smoothness = cfg.Smoothness == null ? null : cfg.Smoothness.GetPixels(m);
+                var occlusion = cfg.Occlusion == null ? null : cfg.Occlusion.GetPixels(m);
+                var metallic = cfg.Metallic == null ? null : cfg.Metallic.GetPixels(m);
+                var emission = cfg.Emission == null ? null : cfg.Emission.GetPixels(m);
                 for (int p = 0; p < heights.Length; p++)
                 {
-                    var color = pixels[p];
-                    if (smoothness != null) color.g = smoothness[p][1];
+                    var color = Color.black;
+                    color.g = smoothness?[p][1] ?? 0.5f;
                     // Height is stored in albedo alpha channel
-                    // if (heights != null) color.a = heights[p][1];
-                    if (occlusion != null) color.a = occlusion[p][1];
+                    color.r = emission?[p][2] ?? 0f;
+                    color.a = occlusion?[p][1] ?? 0.5f;
+                    color.b = metallic?[p][1] ?? 0f;
                     // Invert the roughness if configured to do so
                     if (cfg.IsRoughness) color.g = 1f - color.g;
                     pixels[p] = color;
