@@ -206,7 +206,7 @@ namespace OcbMicroSplat
 		// ####################################################################
 		// ####################################################################
 
-		public static Texture2D CreateHeightFromNormal(Texture2D normal)
+		public static Texture2D CreateHeightFromNormal(Texture2D normal, bool switched = false)
 		{
 			var cpy = new Texture2D(normal.width, normal.height);
 			for (int m = 0; m < normal.mipmapCount; m++)
@@ -216,6 +216,7 @@ namespace OcbMicroSplat
 				{
 					float x = pixels[i].a * 2f - 1f;
 					float y = pixels[i].g * 2f - 1f;
+					if (switched) (x, y) = (y, x);
 					var ao = 1 - Mathf.Sqrt(x * x + y * y);
 					pixels[i] = new Color(ao, ao, ao, 1);
 
@@ -226,7 +227,7 @@ namespace OcbMicroSplat
 			return cpy;
 		}
 
-		public static Texture2D CreateOcclusionFromNormal(Texture2D normal)
+		public static Texture2D CreateOcclusionFromNormal(Texture2D normal, bool switched = false)
 		{
 			var cpy = new Texture2D(normal.width, normal.height);
 			for (int m = 0; m < normal.mipmapCount; m++)
@@ -236,8 +237,8 @@ namespace OcbMicroSplat
 				{
 					float x = pixels[i].a * 2f - 1f;
 					float y = pixels[i].g * 2f - 1f;
+					if (switched) (x, y) = (y, x);
 					var ao = 1 - Mathf.Sqrt(x * x + y * y);
-					// if (i % 935000 == 0) Debug.Log($"{ao} vs {pixels[i].r}, {pixels[i].g}, {pixels[i].b}, {pixels[i].a} => {ao}");
 					pixels[i] = new Color(ao, ao, ao, 1);
 
 				}
@@ -247,7 +248,7 @@ namespace OcbMicroSplat
 			return cpy;
 		}
 
-		public static Texture2D CreateSmoothnessFromNormal(Texture2D normal)
+		public static Texture2D CreateSmoothnessFromNormal(Texture2D normal, bool switched = false)
 		{
 			var cpy = new Texture2D(normal.width, normal.height);
 			for (int m = 0; m < normal.mipmapCount; m++)
@@ -258,6 +259,7 @@ namespace OcbMicroSplat
 					var col = pixels[i];
 					float x = pixels[i].a * 2f - 1f;
 					float y = pixels[i].g * 2f - 1f;
+					if (switched) (x, y) = (y, x);
 					col.r = col.g = col.b = Mathf.Max(
 						Mathf.Abs(x), Mathf.Abs(y));
 					col.a = 1f;

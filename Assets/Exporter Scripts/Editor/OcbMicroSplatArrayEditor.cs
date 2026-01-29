@@ -45,6 +45,10 @@ namespace OcbMicroSplat
         List<int> clears = new List<int>();
         List<int> removes = new List<int>();
 
+        string[] TexSizes = new String[] {
+            "128", "256", "512", "1024", "2048", "4096", "8128"
+        };
+
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
@@ -58,6 +62,9 @@ namespace OcbMicroSplat
 
             if (script.Textures?.Length != script.Size)
                 Array.Resize(ref script.Textures, script.Size);
+
+            script.TexSize = EditorGUILayout
+                .Popup("Size", script.TexSize, TexSizes);
 
             script.WrapMode = (TextureWrapMode)EditorGUILayout
                 .EnumPopup("Wrap Mode", script.WrapMode);
