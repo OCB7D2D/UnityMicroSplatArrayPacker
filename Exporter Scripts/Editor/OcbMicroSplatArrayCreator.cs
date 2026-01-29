@@ -7,14 +7,16 @@ namespace OcbMicroSplat
     public static class OcbMicroSplatArrayCreator
     {
 
-        static int Width = 2048;
-        static int Height = 2048;
 
         public static void CopyTextureAlbedo(OcbMicroSplatArrayEntry cfg,
             Texture2DArray dst, int i, bool linear = true)
         {
+
+            int Width = dst.width;
+            int Height = dst.height;
+            // Create texture with 8 mipmap levels
             Texture2D tmp = new Texture2D(Width, Height,
-                TextureFormat.RGBA32, true, false);
+                TextureFormat.RGBA32, 8, false);
             float NormFactor = 1; float NormOffset = 0;
             // Optimize height map
             if (cfg.Height != null)
@@ -79,6 +81,8 @@ namespace OcbMicroSplat
 
         public static void CopyTextureNormal(OcbMicroSplatArrayEntry cfg, Texture2DArray dst, int i)
         {
+            int Width = dst.width;
+            int Height = dst.height;
             Texture2D tmp = new Texture2D(Width, Height,
                 TextureFormat.RGBA32, true, true);
             for (int m = 0; m < cfg.Normal.mipmapCount; m++)
@@ -90,14 +94,14 @@ namespace OcbMicroSplat
                     var pixel = pixels?[p] ?? Color.black;
                     if (cfg.IsNormalInverted) pixel.g = 1f - pixel.g;
                     if (cfg.IsNormalSwitched) (pixel.g, pixel.a) = (pixel.a, pixel.g);
-                    pixel.r = emission?[p][0] ?? 0f;
-                    pixel.b = emission?[p][1] ?? 0f;
+                    pixel.r = (emission?[p][0] ?? 0f) * (emission?[p][3] ?? 1);
+                    pixel.b = (emission?[p][1] ?? 0f) * (emission?[p][3] ?? 1);
                     pixels[p] = pixel;
 
                 }
                 // pixels[p] = apply(pixels[p]);
                 // c => new Color(0, c.a, c.b, c.g), 
-                
+
                 tmp.SetPixels(pixels, m);
             }
             EditorUtility.CompressTexture(tmp, TextureFormat.DXT5, 100);
@@ -108,6 +112,8 @@ namespace OcbMicroSplat
         public static void CopyTextureSHAO(OcbMicroSplatArrayEntry cfg,
             Texture2DArray dst, int i, bool linear = true)
         {
+            int Width = dst.width;
+            int Height = dst.height;
             Texture2D tmp = new Texture2D(Width, Height,
                 TextureFormat.RGBA32, true, linear);
             for (int m = 0; m < tmp.mipmapCount; m++)
@@ -123,7 +129,7 @@ namespace OcbMicroSplat
                     var color = Color.black;
                     color.g = smoothness?[p][1] ?? 0.5f;
                     // Height is stored in albedo alpha channel
-                    color.r = emission?[p][2] ?? 0f;
+                    color.r = (emission?[p][2] ?? 0f) * (emission?[p][3] ?? 1);
                     color.a = occlusion?[p][1] ?? 0.5f;
                     color.b = metallic?[p][1] ?? 0f;
                     // Invert the roughness if configured to do so
@@ -137,8 +143,25 @@ namespace OcbMicroSplat
                 Graphics.CopyTexture(tmp, 0, m, dst, i, m);
         }
 
+        public static int GetDimSize(int index)
+        {
+            switch (index) {
+                case 0: return 128;
+                case 1: return 256;
+                case 2: return 512;
+                case 3: return 1024;
+                case 4: return 2048;
+                case 5: return 4096;
+                case 6: return 8128;
+            }
+            return 2048;
+        }
+
         public static void CreateTextureArrays(OcbMicroSplatArray cfg, string path)
         {
+
+            int Width = GetDimSize(cfg.TexSize);
+            int Height = GetDimSize(cfg.TexSize);
 
             var textures = cfg.Textures;
 
@@ -189,7 +212,7 @@ namespace OcbMicroSplat
                     if (texture.Normal != null)
                     {
                         Debug.LogWarning("Create height from normal map");
-                        texture.Height = TextureUtils.CreateHeightFromNormal(texture.Normal);
+                        texture.Height = TextureUtils.CreateHeightFromNormal(texture.Normal, texture.IsNormalSwitched);
                     }
                 }
 
@@ -198,7 +221,7 @@ namespace OcbMicroSplat
                     if (texture.Normal != null)
                     {
                         Debug.LogWarning("Create smothness from normal map");
-                        texture.Smoothness = TextureUtils.CreateSmoothnessFromNormal(texture.Normal);
+                        texture.Smoothness = TextureUtils.CreateSmoothnessFromNormal(texture.Normal, texture.IsNormalSwitched);
                     }
                 }
 
@@ -207,7 +230,7 @@ namespace OcbMicroSplat
                     if (texture.Normal != null)
                     {
                         Debug.LogWarning("Create occlusion from normal map");
-                        texture.Occlusion = TextureUtils.CreateOcclusionFromNormal(texture.Normal);
+                        texture.Occlusion = TextureUtils.CreateOcclusionFromNormal(texture.Normal, texture.IsNormalSwitched);
                     }
                 }
 

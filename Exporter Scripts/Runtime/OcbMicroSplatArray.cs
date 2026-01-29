@@ -15,6 +15,9 @@ namespace OcbMicroSplat
         public string Path = "";
 
         [HideInInspector]
+        public int TexSize = 4;
+
+        [HideInInspector]
         public TextureWrapMode WrapMode = TextureWrapMode.Repeat;
 
         [HideInInspector]
