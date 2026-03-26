@@ -21,6 +21,13 @@ namespace OcbMicroSplat
             "None (largest size and fastest to load)", // 2
         };
 
+        public enum TextureFormat
+        {
+            RGBA,
+            Normal,
+            Map
+        };
+
         // Collect assets from folders (optional recursive)
         private void CollectAssets(UnityEngine.Object root,
             ref List<UnityEngine.Object> exports,
@@ -134,7 +141,7 @@ namespace OcbMicroSplat
 
                     DrawTextureCell(TexTitle("Diffuse", item.Albedo), ref item.Albedo, null, changed => {
                         FillMissingTexturesHeuristically(changed, item, AlbedoPathTails);
-                    });
+                    }, TextureFormat.RGBA);
                     DrawTextureCell(TexTitle("Normal", item.Normal), ref item.Normal, () =>
                     {
                         EditorGUILayout.BeginHorizontal();
@@ -147,9 +154,13 @@ namespace OcbMicroSplat
                         EditorGUILayout.EndHorizontal();
                     }, changed => {
                         FillMissingTexturesHeuristically(changed, item, NormalPathTails);
-                    });
+                    }, TextureFormat.Normal);
                     DrawTextureCell(TexTitle("Height", item.Height), ref item.Height, () =>
                     {
+                        EditorGUILayout.BeginHorizontal();
+                        Enum rv = EditorGUILayout.EnumPopup(item.HeightChannel, GUILayout.MaxWidth(64));
+                        if (rv != null) item.HeightChannel = (TextureChannel)rv;
+                        EditorGUILayout.EndHorizontal();
                         EditorGUILayout.BeginHorizontal();
                         EditorGUILayout.LabelField("Center", GUILayout.Width(44));
                         bool wasToggled = item.IsHeightCentered;
@@ -165,8 +176,12 @@ namespace OcbMicroSplat
                         
                     }, changed => {
                         FillMissingTexturesHeuristically(changed, item, HeightPathTails);
-                    });
+                    }, TextureFormat.Map);
                     DrawTextureCell(TexTitle("Smooth", item.Smoothness), ref item.Smoothness, () => {
+                        EditorGUILayout.BeginHorizontal();
+                        Enum rv = EditorGUILayout.EnumPopup(item.SmoothChannel, GUILayout.MaxWidth(64));
+                        if (rv != null) item.SmoothChannel = (TextureChannel)rv;
+                        EditorGUILayout.EndHorizontal();
                         EditorGUILayout.BeginHorizontal();
                         EditorGUILayout.LabelField("Invert", GUILayout.Width(44));
                         item.IsRoughness = EditorGUILayout.Toggle(item.IsRoughness, GUILayout.Width(20));
@@ -174,16 +189,26 @@ namespace OcbMicroSplat
                     }, changed => {
                         FillMissingTexturesHeuristically(changed, item, SmoothnessPathTails);
                         item.IsRoughness = changed.name.ToLower().Contains("rough");
-                    });
-                    DrawTextureCell(TexTitle("AO", item.Occlusion), ref item.Occlusion, null, changed => {
+                    }, TextureFormat.Map);
+                    DrawTextureCell(TexTitle("AO", item.Occlusion), ref item.Occlusion, () => {
+                        EditorGUILayout.BeginHorizontal();
+                        Enum rv = EditorGUILayout.EnumPopup(item.OcclusionChannel, GUILayout.MaxWidth(64));
+                        if (rv != null) item.OcclusionChannel = (TextureChannel)rv;
+                        EditorGUILayout.EndHorizontal();
+                    }, changed => {
                         FillMissingTexturesHeuristically(changed, item, OcclusionPathTails);
-                    });
-                    DrawTextureCell(TexTitle("Metallic", item.Metallic), ref item.Metallic, null, changed => {
+                    }, TextureFormat.Map);
+                    DrawTextureCell(TexTitle("Metallic", item.Metallic), ref item.Metallic, () => {
+                        EditorGUILayout.BeginHorizontal();
+                        Enum rv = EditorGUILayout.EnumPopup(item.MetallicChannel, GUILayout.MaxWidth(64));
+                        if (rv != null) item.MetallicChannel = (TextureChannel)rv;
+                        EditorGUILayout.EndHorizontal();
+                    }, changed => {
                         FillMissingTexturesHeuristically(changed, item, MetallicPathTails);
-                    });
+                    }, TextureFormat.Map);
                     DrawTextureCell(TexTitle("Emission", item.Emission), ref item.Emission, null, changed => {
                         FillMissingTexturesHeuristically(changed, item, EmissionPathTails);
-                    });
+                    }, TextureFormat.RGBA);
 
                     EditorGUILayout.EndHorizontal();
                 }
@@ -318,7 +343,7 @@ namespace OcbMicroSplat
             return onDisk ? $"{title}[C]" : title;
         }
 
-        // Make sure we can read the texture on the GPU
+        // Make sure we can read the texture on the CPU
         private static void CheckReadableTexture(Texture2D texture)
         {
             if (texture == null) return;
@@ -335,16 +360,86 @@ namespace OcbMicroSplat
             }
         }
 
-        private static void DrawTextureCell(string name, ref Texture2D tex,
-            Action renderer = null, Action<Texture2D> changed = null)
+
+        // Make sure texture is of correct size
+        // ToDo: check that the texture is square?
+        private void CheckTextureSize(Texture2D texture)
+        {
+            if (texture == null) return;
+
+            var cfg = (OcbMicroSplatArray)target;
+
+            int size = OcbMicroSplatArrayCreator.GetDimSize(cfg.TexSize);
+
+            if (texture.width == size) return;
+            if (texture.height == size) return;
+
+            if (GUILayout.Button("Fix: Adjust size", GUILayout.Height(24)))
+            {
+                string path = AssetDatabase.GetAssetPath(texture);
+                if (AssetImporter.GetAtPath(path) is TextureImporter importer)
+                {
+                    if (importer.maxTextureSize == size) return;
+                    importer.maxTextureSize = size;
+                    importer.SaveAndReimport();
+                }
+            }
+        }
+        
+
+        // Make sure texture is in RGBA format
+        private static void CheckRgbaTexture(Texture2D texture)
+        {
+            if (texture == null) return;
+            // Check for valid formats (might support multiple, but this is the one we want)
+            if (texture.format == UnityEngine.TextureFormat.RGBA32) return;
+            // Show an error/warning in this case
+            GUIStyle errorStyle = new GUIStyle(GUI.skin.box);
+            errorStyle.normal.textColor = Color.red;
+            GUILayout.Box("Bad format", errorStyle);
+        }
+
+        // Make sure texture is a normal texture
+        private static void CheckNormalTexture(Texture2D texture)
+        {
+            if (texture == null) return;
+            string path = AssetDatabase.GetAssetPath(texture);
+            if (!(AssetImporter.GetAtPath(path) is TextureImporter importer)) return;
+            // Debug.Log($" Normal has format {texture.graphicsFormat}");
+            if (importer.textureType != TextureImporterType.NormalMap)
+            {
+                if (GUILayout.Button("Fix: Normal Map", GUILayout.Height(24)))
+                {
+                    importer.textureType = TextureImporterType.NormalMap;
+                    importer.SaveAndReimport();
+                }
+                return;
+            }
+        }
+
+        private void DrawTextureCell(string name, ref Texture2D tex,
+            Action renderer = null, Action<Texture2D> changed = null,
+            TextureFormat format = TextureFormat.RGBA)
         {
             EditorGUILayout.BeginVertical();
             EditorGUILayout.LabelField(name, GUILayout.Width(64));
             var color = GUI.backgroundColor;
             if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(tex)))
                 GUI.backgroundColor = Color.red;
+            CheckTextureSize(tex);
             CheckReadableTexture(tex);
             CheckUncompressedTexture(tex);
+            switch (format)
+            {
+                case TextureFormat.RGBA:
+                    CheckRgbaTexture(tex);
+                    break;
+                case TextureFormat.Normal:
+                    CheckNormalTexture(tex);
+                    break;
+                case TextureFormat.Map:
+                    break;
+            }
             var previous = tex;
             tex = EditorGUILayout.ObjectField(tex, typeof(Texture2D), false,
                 GUILayout.Width(64), GUILayout.Height(64)) as Texture2D;

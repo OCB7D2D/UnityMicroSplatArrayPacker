@@ -32,6 +32,15 @@ namespace OcbMicroSplat
     }
 
     [System.Serializable]
+    public enum TextureChannel
+    {
+        Red = 0,
+        Green = 1,
+        Blue = 2,
+        Alpha = 3
+    };
+
+    [System.Serializable]
     public class OcbMicroSplatArrayEntry
     {
 
@@ -42,6 +51,10 @@ namespace OcbMicroSplat
         public bool IsNormalInverted = false;
         public bool IsHeightCentered = false;
         public bool IsHeightNormalized = true;
+        public TextureChannel HeightChannel = TextureChannel.Blue;
+        public TextureChannel SmoothChannel = TextureChannel.Alpha;
+        public TextureChannel OcclusionChannel = TextureChannel.Green;
+        public TextureChannel MetallicChannel = TextureChannel.Red;
         public Texture2D Smoothness;
         public bool IsRoughness = false;
         public Texture2D Metallic;

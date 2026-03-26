@@ -61,11 +61,12 @@ namespace OcbMicroSplat
                 Color[] pixels = new Color[Width * Height];
                 var albedo = cfg.Albedo == null ? null : cfg.Albedo.GetPixels(m);
                 var heights = cfg.Height == null ? null : cfg.Height.GetPixels(m);
+                int chn_h = (int)cfg.HeightChannel;
                 for (int p = 0; p < albedo.Length; p++)
                 {
                     Color color = new Color(0, 0, 0, 0.5f);
                     var diff = albedo?[p] ?? Color.clear;
-                    color.a = heights?[p].g ?? 0.5f;
+                    color.a = heights?[p][chn_h] ?? 0.5f;
                     color.a *= NormFactor + NormOffset;
                     color.r = diff.r;
                     color.g = diff.g;
@@ -124,14 +125,17 @@ namespace OcbMicroSplat
                 var occlusion = cfg.Occlusion == null ? null : cfg.Occlusion.GetPixels(m);
                 var metallic = cfg.Metallic == null ? null : cfg.Metallic.GetPixels(m);
                 var emission = cfg.Emission == null ? null : cfg.Emission.GetPixels(m);
+                int chn_s = (int)cfg.SmoothChannel;
+                int chn_o = (int)cfg.OcclusionChannel;
+                int chn_m = (int)cfg.MetallicChannel;
                 for (int p = 0; p < heights.Length; p++)
                 {
                     var color = Color.black;
-                    color.g = smoothness?[p][1] ?? 0.5f;
+                    color.g = smoothness?[p][chn_s] ?? 0.5f;
                     // Height is stored in albedo alpha channel
                     color.r = (emission?[p][2] ?? 0f) * (emission?[p][3] ?? 1);
-                    color.a = occlusion?[p][1] ?? 0.5f;
-                    color.b = metallic?[p][1] ?? 0f;
+                    color.a = occlusion?[p][chn_o] ?? 0.5f;
+                    color.b = metallic?[p][chn_m] ?? 0f;
                     // Invert the roughness if configured to do so
                     if (cfg.IsRoughness) color.g = 1f - color.g;
                     pixels[p] = color;
