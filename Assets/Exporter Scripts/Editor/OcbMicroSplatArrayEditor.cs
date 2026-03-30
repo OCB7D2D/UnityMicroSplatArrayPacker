@@ -56,6 +56,10 @@ namespace OcbMicroSplat
             "128", "256", "512", "1024", "2048", "4096", "8128"
         };
 
+        static GUIContent diffLabel = new GUIContent("Diffues", "Albedo red, Albedo green, Albedo blue, height");
+        static GUIContent normLabel = new GUIContent("Normal", "Emission (r), normal (x), Emission(g), normal (y)");
+        static GUIContent shaoLabel = new GUIContent("SHAO", "Emission (b), smoothness, metallic, occlusion");
+
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
@@ -81,6 +85,19 @@ namespace OcbMicroSplat
 
             script.AnisoLevel = EditorGUILayout.IntSlider(
                 "Aniso Level", script.AnisoLevel, 0, 16);
+
+            script.openTaNames = EditorGUILayout.Foldout(script.openTaNames, "Texture Array Names");
+
+            if (script.openTaNames)
+            {
+                script.AlbedoTexArrName = EditorGUILayout.TextField(diffLabel, script.AlbedoTexArrName);
+                script.NormTexArrName = EditorGUILayout.TextField(normLabel, script.NormTexArrName);
+                script.SmaoTexArrName = EditorGUILayout.TextField(shaoLabel, script.SmaoTexArrName);
+            }
+
+            GUI.enabled = script.Textures.All(t => t.Albedo != null); // && t.Normal != null
+            bool generate = GUILayout.Button("Generate Texture2D Array", GUILayout.Height(24));
+            GUI.enabled = true;
 
             // int clear = -1;
             // int remove = -1
@@ -235,16 +252,18 @@ namespace OcbMicroSplat
             }
 
             GUI.enabled = script.Textures.All(t => t.Albedo != null); // && t.Normal != null
-            if (GUILayout.Button("Generate Texture2D Array", GUILayout.Height(24)))
-            {
-                string path = AssetDatabase.GetAssetPath(target).Replace("\\", "/");
-                OcbMicroSplatArrayCreator.CreateTextureArrays(script, path);
-            }
+            generate |= GUILayout.Button("Generate Texture2D Array", GUILayout.Height(24));
             GUI.enabled = true;
 
             if (EditorGUI.EndChangeCheck())
             {
                 EditorUtility.SetDirty(target);
+            }
+
+            if (generate)
+            {
+                string path = AssetDatabase.GetAssetPath(target).Replace("\\", "/");
+                OcbMicroSplatArrayCreator.CreateTextureArrays(script, path);
             }
 
         }
