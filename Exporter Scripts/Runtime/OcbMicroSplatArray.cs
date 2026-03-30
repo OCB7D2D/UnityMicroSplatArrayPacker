@@ -29,6 +29,18 @@ namespace OcbMicroSplat
         [HideInInspector]
         public OcbMicroSplatArrayEntry[] Textures = null;
 
+        [HideInInspector]
+        public bool openTaNames = false;
+
+        [HideInInspector]
+        public string AlbedoTexArrName = "{name}_ta_rgbh";
+
+        [HideInInspector]
+        public string NormTexArrName = "{name}_ta_enen";
+
+        [HideInInspector]
+        public string SmaoTexArrName = "{name}_ta_esmo";
+
     }
 
     [System.Serializable]
@@ -50,7 +62,7 @@ namespace OcbMicroSplat
         public bool IsNormalSwitched = true;
         public bool IsNormalInverted = false;
         public bool IsHeightCentered = false;
-        public bool IsHeightNormalized = true;
+        public bool IsHeightNormalized = false;
         public TextureChannel HeightChannel = TextureChannel.Blue;
         public TextureChannel SmoothChannel = TextureChannel.Alpha;
         public TextureChannel OcclusionChannel = TextureChannel.Green;

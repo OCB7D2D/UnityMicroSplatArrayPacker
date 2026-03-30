@@ -1,3 +1,4 @@
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,8 +9,7 @@ namespace OcbMicroSplat
     {
 
 
-        public static void CopyTextureAlbedo(OcbMicroSplatArrayEntry cfg,
-            Texture2DArray dst, int i, bool linear = true)
+        public static void CopyTextureAlbedo(OcbMicroSplatArrayEntry cfg, Texture2DArray dst, int i)
         {
 
             int Width = dst.width;
@@ -169,9 +169,12 @@ namespace OcbMicroSplat
 
             var textures = cfg.Textures;
 
-            var DiffPath = path.Replace(".asset", "_diff_tarray.asset");
-            var NormPath = path.Replace(".asset", "_norm_tarray.asset");
-            var ShaoPath = path.Replace(".asset", "_shao_tarray.asset");
+            string root = Path.GetDirectoryName(path);
+            string fname = Path.GetFileName(path);
+
+            var DiffPath = Path.Combine(root, cfg.AlbedoTexArrName.Replace("{name}", fname.Replace(".asset", "")) + ".asset");
+            var NormPath = Path.Combine(root, cfg.NormTexArrName.Replace("{name}", fname.Replace(".asset", "")) + ".asset");
+            var ShaoPath = Path.Combine(root, cfg.SmaoTexArrName.Replace("{name}", fname.Replace(".asset", "")) + ".asset"); 
 
             var DiffArray = new Texture2DArray(Width, Height, textures.Length, TextureFormat.DXT5, true, false);
             var NormArray = new Texture2DArray(Width, Height, textures.Length, TextureFormat.DXT5, true, true);
@@ -243,9 +246,9 @@ namespace OcbMicroSplat
                 // var height = texture.Height;
 
 
-                CopyTextureAlbedo(texture, DiffArray, i, false);
+                CopyTextureAlbedo(texture, DiffArray, i);
                 CopyTextureNormal(texture, NormArray, i);
-                CopyTextureSHAO(texture, ShaoArray, i, true);
+                CopyTextureSHAO(texture, ShaoArray, i);
 
                 // texture.Albedo = albedo;
                 // texture.Normal = normal;
@@ -258,6 +261,9 @@ namespace OcbMicroSplat
             CreateArrayAsset(DiffArray, DiffPath);
             CreateArrayAsset(NormArray, NormPath);
             CreateArrayAsset(ShaoArray, ShaoPath);
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
         }
 
         static Shader mergeInChannelShader;
